@@ -1,0 +1,349 @@
+os.loadAPI("os/apis/A")
+local w,h = term.getSize()
+local wh = {term.getSize()}
+local rng = true
+local src = "os/files/config"
+local conf = {}
+local cm = 0
+local txy = {}
+local cT = {}
+local xy2 = {0,0}
+local t = nil
+local ctable = nil
+local colorsC = nil
+local tbP = {}
+local tbl2 = {}
+local xy = {0,0}
+local function setT(src,save)
+	  local file = fs.open(src,"w")
+	  file.write(textutils.serialize(save))
+	  file.close()
+end
+local function drawColorLine(x,y)
+	local tColorLookup = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768}
+	local x1 = x
+	for v,k in ipairs(tColorLookup) do
+		A.pos(x1,y)
+		A.bc(k)
+		write(" ")
+		x1=x1+1
+	end
+end
+local function dImageOps()
+	if #tbP~=#fs.list("os/images") then
+		tbP = { }
+		for v,k in ipairs(fs.list("os/images")) do
+			if fs.isDir("os/images/"..k) then
+				if ("os/images/"..k)=="os/images/icons" then
+				else
+					for s,d in ipairs(fs.list("os/images/"..k)) do
+						table.insert(tbP,k.."/"..d)
+					end
+				end
+			else
+				table.insert(tbP,k)
+			end
+		end
+	end
+	local w,h = term.getSize()
+	local x = 7
+	local y = 2
+	local x2 = w-8
+	local y2 = h-1
+	A.drawFilledBox(x+1,y+1,x2-2,y2-1,colors.white)
+	A.drawBox(x,y,x2,y2,colors.gray)
+	A.drawLine(x2-1,y+2,x2-1,y2-2,colors.orange)
+	A.drawPixel(x2-1,y+1,colors.red)
+	A.drawPixel(x2-1,y2-1,colors.red)
+	A.pos(x2-1,y+1)
+	write("^")
+	A.pos(x2-1,y2-1)
+	write("v")
+	local X = x+2 
+	local Y = y+1
+	A.bc(colors.white)
+	A.tc(colors.black)
+	for v,k in ipairs(tbP) do
+		A.pos(X,Y)
+		write(k)
+		local t = {X-1,X+#k,Y,k} -- x1 x2 y (file name) os/images/kyle = kyle
+		table.insert(tbl2,t)
+		Y=Y+1
+	end
+end
+local function drawOps()
+	txy = {}
+	local x = 2
+	local y = 3
+	local t = {"Background Image:","Background Color:","Meun Color:","Meun Text Color:","Side Meun Color:","Side Meun Text Color:","Config Background Image:","Config Background Color:","Config Text Color:"}
+	local tt = {"BCI","BCC","MC","MTC","SMC","SMTC","CBI","CBC","CTC"} 
+	local curt = 1
+	A.tc(colors.white)
+	A.bc(colors.black)
+	for v,k in ipairs(t) do
+		A.pos(x,y)
+		A.bc(conf["CBC"])
+		A.tc(conf["CTC"])
+		write(k.." ")
+		A.tc(colors.red)
+		local type1 = "string"
+		local tn = {}
+		if type(conf[tt[curt]])=="number" then
+			type1="number"
+			if (conf[tt[curt]])~=conf["CBC"] then
+				A.bc(conf[tt[curt]])
+				write("   ")
+				tn = {x+#k+1,x+#k+3,y,type1,tostring(tt[curt])}
+			else
+				for g,f in ipairs(colorsC) do
+					if f[1]==conf[tt[curt]] then
+						term.setBackgroundColor(f[3])
+						A.tc(f[1])
+						write(string.rep(" ",#f[2]+2))
+						A.pos(x+#k+2,y)
+						write(f[2])
+						tn = {x+#k+1,x+#k+7,y,type1,tostring(tt[curt])}
+					end
+				end
+			end
+		else
+			write(tostring(conf[tt[curt]]))
+			type1="Image"
+			tn = {x+#k+1,x+#k+#conf[tt[curt]],y,type1,tostring(tt[curt])}
+		end
+		A.bc(conf["CBC"])
+		-- tn = (x1, x2, y, type ) tpye = string or color
+		table.insert(txy,1,tn)
+		curt=curt+1
+		y=y+1
+	end
+	A.pos(2,h-4)
+	A.tc(conf["CTC"])
+	write("UserName:")
+	A.tc(colors.red)
+	write(tostring(conf["UN"]))
+	tn = {11,11+#conf["UN"]-1,h-4,"string","UN"}
+	table.insert(txy,1,tn)
+	A.pos(2,h-2)
+	A.tc(conf["CTC"])
+	write("PassWord:")
+	A.tc(colors.red)
+	write(tostring(conf["PW"]))
+	tn = {11,11+#conf["PW"]-1,h-2,"string","PW"}
+	table.insert(txy,1,tn)
+end
+local function dm()
+	A.bc(conf["CBC"])
+	A.meun(conf["CBI"],1,1)
+	drawOps()
+	A.Time(wh[1]-4,wh[2],conf["MC"],conf["MTC"])
+end
+function main()
+	conf = A.getT("os/files/config")
+	colorsC = A.getT("os/files/colorsC")
+	dm()
+	t = os.startTimer(.1)
+	while true do
+		conf = A.getT("os/files/config")
+		local arg = { os.pullEvent() }
+		if arg[1]=="timer" and arg[2]==t then
+			A.Time(wh[1]-3,wh[2],conf["MC"],conf["MTC"])
+			t = os.startTimer(.1)
+		elseif cm==0 then
+			if arg[1]=="mouse_click" then
+				if arg[2]==1 then
+					if arg[3]>=2 and arg[3]<=8 and arg[4]==1 then
+						A.meun5()
+						cm=1
+					else
+						local ok = false
+						local x = arg[3]
+						local y = arg[4]
+						-- tn = (x1, x2, y, type ) tpye = string or color
+						for v,k in ipairs(txy) do
+							if x>=k[1] and x<=k[2] then
+								if y==k[3] then
+									A.tc(colors.white)
+									ok = true
+									cT = txy[v]
+								end
+							end
+						end
+						if ok then
+							cm=2
+						else
+							dm()
+						end
+					end
+				elseif arg[2]==2 then
+					xy = {A.meun6(arg[3],arg[4])} 
+					cm=5
+				end
+			end
+		elseif cm==1 then
+			if arg[1]=="mouse_click" then
+				if arg[2]==1 then 
+					if arg[3]>=2 and arg[3]<=11 then
+						if arg[4]==3 then
+							os.shutdown()
+						elseif arg[4]==4 then
+							os.reboot()
+						elseif arg[4]==5 then
+							break
+						else 
+							dm()
+							cm=0
+						end
+					else
+						dm()
+						cm=0
+					end
+				else
+					dm()
+					cm=0
+				end
+			end
+		elseif cm==2 then
+			if cT[4]=="string" then
+				A.pos(cT[1],cT[3])
+				A.bc(colors.black)
+				A.tc(colors.green)
+				write(string.rep(" ",cT[2]-cT[1]+1))
+				A.pos(cT[1],cT[3])
+				local input = read()
+				sleep(.2)
+				if input~=conf[cT[5]] then
+					conf[cT[5]]=input
+				end
+				setT("os/files/config",conf)
+				dm()
+				cm=0
+			elseif cT[4]=="Image" then
+				dImageOps()
+				t = os.startTimer(.1)
+				cm=4
+			elseif cT[4]=="number" then
+				ctable = {}
+				local function color()
+					local t = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768}
+					local x = cT[2]+2
+					local y = cT[3]
+					for v,k in ipairs(t) do
+						A.bc(k)
+						write(" ")
+						local ct = {x,y,k}
+						table.insert(ctable,ct)
+						x=x+1
+					end
+				end
+				A.pos(cT[2]+2,cT[3])
+				color()
+				cm=3
+			end
+			t = os.startTimer(.1)
+		elseif cm==3 then
+			if arg[1]=="mouse_click" and arg[2]==1 then
+				for v,k in ipairs(ctable) do
+					if arg[3]==k[1] and arg[4]==k[2] then
+						if cT[5]=="CBC" then
+							if k[3]~=conf["CTC"] then
+								conf[cT[5]]=k[3]
+								setT("os/files/config",conf)
+							end
+						elseif cT[5]=="CTC" then
+							if k[3]~=conf["CBC"] then
+								conf[cT[5]]=k[3]
+								setT("os/files/config",conf)
+							end
+						else
+							conf[cT[5]]=k[3]
+							setT("os/files/config",conf)
+						end
+					end
+				end
+				dm()
+				cm=0
+			end
+			t = os.startTimer(.1)
+		elseif cm==4 then
+			if arg[1]=="mouse_click" then
+				if arg[2]==1 then
+					for v,k in ipairs(tbl2) do
+						if arg[3]>=k[1] and arg[3]<=k[2] then
+							if arg[4]==k[3] then
+								conf[cT[5]]="os/images/"..k[4]
+							end
+						end
+					end
+					dm()
+					cm=0
+					setT("os/files/config",conf)
+				elseif arg[2]==2 then
+					for v,k in ipairs(tbl2) do
+						if arg[3]>=k[1] and arg[3]<=k[2] then
+							if arg[4]==k[3] then
+								A.meun4(k[1]+1,k[3]+1)
+								cm=6
+								xy = {k[1]+1,k[3]+1}
+							end
+						end
+					end
+				else
+					dm()
+					cm=0
+				end
+			end
+		elseif cm==5 then
+			if arg[1]=="mouse_click" then
+				if arg[2]==1 then
+					if arg[3]>=xy[1]+1 and arg[3]<=xy[1]+11 then
+						if arg[4]==xy[2]+1 then
+							dm()
+							local input = A.userin(2,3,3)
+							--shell.run("//test")
+							dm()
+							t = os.startTimer(.1)
+							cm=0
+						else
+							dm()
+							cm=0
+						end
+					else
+						dm()
+						cm=0
+					end
+				else
+					dm()
+					cm=0
+				end
+			end
+		elseif cm==6 then
+			if arg[1]=="mouse_click" then
+				if arg[2]==1 then
+					if arg[3]>=xy[1]+1 and arg[3]<=xy[1]+8 then
+						if arg[4]==xy[2]+1 then
+							
+						elseif arg[4]==xy[2]+2 then
+						
+						else
+							dm()
+							dImageOps()
+							t = os.startTimer(.1)
+							cm=4
+						end
+					else
+						dm()
+						dImageOps()
+						t = os.startTimer(.1)
+						cm=4
+					end
+				else
+					dm()
+					dImageOps()
+					t = os.startTimer(.1)
+					cm=4
+				end
+			end
+		end
+	end
+end

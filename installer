@@ -1,0 +1,158 @@
+--setup functons
+function cls()
+  term.clear()
+end
+function pos(x,y)
+ term.setCursorPos(x,y)
+end
+function bc(c)
+  term.setBackgroundColor(c)
+end
+function tc(c)
+  term.setTextColor(c)
+end
+--pastebin stuff
+local function get(paste)
+	local response = http.get(
+		"http://pastebin.com/raw/"..textutils.urlEncode( paste )
+	)
+	if response then
+		local sResponcse = response.readAll()
+		response.close()
+		return sResponcse
+	else
+		error(paste)
+	end
+end
+local function pastebin(sCode,path)
+	local sFile = path
+	local sPath = sFile
+	if fs.exists( sPath ) then
+		error("file exists")
+	end
+	--gets the contents from pastebin
+	local res = get(sCode)
+	if res then	
+		local file = fs.open( sPath, "w" )
+		file.write( res )
+		file.close()
+	end	
+end
+--error checking function
+function Error(err)
+	local size = { term.getSize() }
+	tc(colors.white)
+	bc(colors.blue)
+	cls()
+	pos(1,1)
+	write("+")
+	write(string.rep("=",size[1]-2))
+	write("+")
+	pos(1,size[2])
+	write("+")
+	write(string.rep("=",size[1]-2))
+	write("+")
+	function g(x)
+    local y = 2
+    while y<size[2] do
+      pos(x,y)
+      write("|")
+      y = y+1
+    end
+	end 
+	g(1)
+	g(size[1])
+	local function cT(t,l)
+		local w,h = term.getSize()
+		pos(math.floor(w/2-t:len()/2 +.5),l)
+		write(t)
+	end
+	cT("Error!",3)
+	pos(2,4)
+	write(string.rep("-",size[1]-2))
+	cT(err,6)
+	sleep(2)
+	pos(2,size[2]-1)
+end
+--Updates files
+local function setup()
+--deleteing prior os
+	print("Setting up files")
+	if fs.exists("os") then
+		fs.delete("os")
+	end
+--make directorys
+	print("Installing directorys")
+	fs.makeDir("os")
+	fs.makeDir("os/APIS")
+	fs.makeDir("os/files")
+	fs.makeDir("os/images")
+	fs.makeDir("os/images/icons")
+	fs.makeDir("os/images/icons/games")
+	fs.makeDir("os/programs")
+	fs.makeDir("os/programs/games")
+--get files
+	print("Installing Main files")
+	pastebin("RNNJq9ng","os/boot")
+	pastebin("nudDqAKx","os/os")
+	pastebin("vSQEBHjZ","os/APIS/A")
+	pastebin("BqUbtktC","os/APIS/update")
+	pastebin("H44JHjDF","os/APIS/fig")
+	pastebin("Yvnaz8HQ","os/files/conf")
+	pastebin("pNKEE5hz","os/files/config")
+	pastebin("DYF22zCN","os/files/colorsC")
+	pastebin("TBpgmKAN","os/images/boot")
+	pastebin("is5w4ehg","os/images/input")
+	pastebin("V1h8nasT","os/images/update")
+	pastebin("WecmC3HF","os/images/config")
+	pastebin("2swxhSDt","os/images/setup")
+	pastebin("gu3WEEX1","os/images/icons/blank")
+	pastebin("yw3wtZSK","os/images/icons/icon1")
+--added images 
+	print("Installing added Icons")
+	pastebin("MtaqZ9fa","os/images/icons/fileM")
+	pastebin("M4Sb4JBm","os/images/icons/test")
+	pastebin("gk44pnvr","os/images/icons/games/adventure")
+	pastebin("AEwpresa","os/images/icons/games/redriction")
+	pastebin("vC07aV35","os/images/icons/games/snake")
+--added programs
+	print("Installing added Programs")
+	pastebin("C3KuFWWC","os/programs/ice")
+	pastebin("BCTAxDsP","os/programs/test") --[[
+	Need to get rid of test program at later date]]
+	pastebin("r1b8Nife","os/programs/games/adventure")
+	pastebin("DxPMFcPj","os/programs/games/redriction")
+	pastebin("MXGyDKdV","os/programs/games/snake")
+	print("Installing startup and Configrations")
+	--pastebin("","os/programs/music") --adds in the music player 
+	--music not uploaded
+	--accedently delete music need to look for on other computer
+	local file = fs.open( "startup", "w" )
+	file.write("shell.run('os/boot')")
+	file.close()
+	print("Install Done")
+	sleep(2)
+	pastebin("CBd0hMBR","os/files/setup")	
+end
+function dm()
+		bc(colors.black)
+		tc(colors.white)
+		cls()
+		local function cT(t,l)
+			local w,h = term.getSize()
+			pos((math.floor(w/2-t:len()/2 +.5)),l)
+			write(t)
+		end
+		cT("Updating OS",1)
+		print(string.rep("=",51))
+end
+function main()
+	dm()
+	setup()
+end
+local ok, err = pcall(main)
+if not ok then
+	Error(err)
+else
+	shell.run("os/files/setup")
+end

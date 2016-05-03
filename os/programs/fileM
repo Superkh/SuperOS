@@ -1,0 +1,135 @@
+os.loadAPI("os/APIS/A")
+--vars
+run = true
+wh = {term.getSize()}
+mTime = true -- 24 hour time
+hidden = false
+dir = ""
+slc = 1
+files = {}
+scroll = 1
+copy = {}
+--local functions
+local function setColor(bc,tc)
+	term.setBackgroundColor(bc)
+	term.setTextColor(tc)
+end
+local function pRight(y,str,bc,tc)
+	setColor(bc,tc)
+	term.setCursorPos(wh[1]-#str+1,y)
+	write(str)
+end
+local function pCentered(y,str,bc,tc)
+	setColor(bc,tc)
+	term.setCursorPos(wh[1]/2-#str/2,y)
+	write(str)
+end
+local function pHere(x,y,str,bc,tc)
+	setColor(bc,tc)
+	term.setCursorPos(x,y)
+	term.write(str)
+end
+local function Time()
+	local mTime = true
+	local tTime = textutils.formatTime(os.time(),mTime)
+	pHere(wh[1]-#tTime+1,wh[2],tTime,colors.gray,colors.white)
+end
+local function gFiles()
+	files = {}
+	if hidden then
+		files = fs.list(dir)
+	else
+		local temp = fs.list(dir)
+		for k,v in pairs(temp) do
+			if v:sub(1,1) ~= '.' then
+				files[#files+1] = v
+			end
+		end
+	end
+end
+local function scrollFiles(upDown)
+	if upDown == -1 then
+		if scroll > 0 then scroll = scroll-1 end
+	elseif upDown == 1 then
+		if scroll < (#files-wh[2]/1.2) then scroll = scroll+1 end
+	end
+end
+local function dMeun()
+	for i =2,wh[2]-1 do
+		pHere(wh[1]-11,i,"           ",2048,1)
+	end
+	--[[if slc==0 then	
+		if hidden then
+		else
+		end
+		if copy[1] then
+		end
+	elseif slc > 0 then
+		if fs.isDir(dir..files[scl]) then
+		else
+		end
+	end]]
+end
+local function dFiles()
+	A.drawFilledBox(1,2,wh[1]-11,wh[2]-1,colors.white)
+	for k,v in pairs(files) do
+		local bc,tc = 1,32768
+		if fs.isDir(dir..v) then tc = 32 end
+		if k == slc then bc = 256 end
+		pHere(2,2+k-scroll,v,bc,tc)
+	end
+end
+local function dm()
+	A.bc(colors.white)
+	A.cls()
+	A.pos(1,1)
+	A.bc(colors.gray)
+	A.clsL()
+	A.pos(1,wh[2])
+	A.clsL()
+	pHere(1,1,"X",colors.red,colors.black)
+	Time()
+	for i =2,wh[2]-1 do
+		if i==2 then
+			pRight(i,'^',256,1)
+		elseif i == wh[2]-1 then
+			pRight(i,'v',256,1)
+		else
+			pRight(i,' ',256,1)
+		end
+	end
+	dFiles()
+end
+--main
+function main()
+	local t = os.startTimer(1)
+	gFiles()
+	dm()
+	while run do
+		local arg = { os.pullEvent() }
+		if arg[1]=="mouse_click" then
+		elseif arg[1]=="key" then
+			if arg[2]==16 then
+				break
+			end
+		elseif arg[1]=="timer" then
+			if arg[2]==t then
+				Time()
+				t = os.startTimer(1)
+			end
+		end
+	end
+end
+--erros
+local ok,err = pcall(main)
+if not ok then
+	A.Error(err)
+else
+	A.pos(1,2)
+	--[[
+	A.bc(colors.black)
+	A.tc(colors.white)
+	A.pos(1,1)
+	A.cls()
+	]]
+end

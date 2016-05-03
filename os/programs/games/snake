@@ -1,0 +1,3 @@
+term.setBackgroundColor(colors.black)
+term.clear()
+shell.run("rom/programs/fun/worm")

@@ -1,0 +1,13 @@
+rng= true
+term.setCursorPos(1,1)
+while rng do
+  local arg = { os.pullEvent() }
+  if arg[1]=="mouse_click" then
+    print(arg[2]," ",arg[3]," ",arg[4])
+  elseif arg[1]=="key" then
+    if arg[2]==16 then
+      rng = false
+    end
+    print(arg[1], " ", arg[2])
+  end
+end

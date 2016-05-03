@@ -1,0 +1,34 @@
+os.loadAPI("os/APIS/A")
+local function update()
+	--remove unwanted files
+	print("Setting up for download")
+	sleep(1)
+	fs.delete("os/os")
+	fs.delete("startup")
+	fs.delete("os/boot")
+	--add new code
+	print("Installing Main files")
+	sleep(1)
+	A.pastebin("nudDqAKx","os/os")
+	A.pastebin("vSQEBHjZ","os/APIS/A")
+	A.pastebin("RNNJq9ng","os/boot")
+	print("Updating Needed files")
+	A.pastebin("H44JHjDF","os/APIS/fig")
+	A.pastebin("pNKEE5hz","os/files/config")
+	A.pastebin("DYF22zCN","os/files/colorsC")
+	--add startup
+	print("finnishing Up")
+	sleep(1)
+	local file = fs.open( "startup", "w" )
+	file.write("shell.run('os/boot')")
+	file.close()
+	print("done")
+	sleep(1)
+end
+local ok, err = pcall(update)
+if not ok then
+	A.Error(err)
+else
+	sleep(2)
+	os.reboot()
+end

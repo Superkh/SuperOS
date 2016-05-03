@@ -1,0 +1,4 @@
+term.setBackgroundColor(colors.black)
+term.clear()
+term.setCursorPos(1,1)
+shell.run("rom/programs/fun/adventure")
