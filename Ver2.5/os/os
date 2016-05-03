@@ -1,0 +1,411 @@
+os.loadAPI("os/apis/A")
+os.loadAPI("os/apis/fig")
+os.pullEvent = os.pullEventRaw
+--main vars
+conf = A.getT("os/files/config")
+local rng = true
+local cm = 0
+local i = conf["BCI"]
+local xy = {0,0}
+local xy2= {0,0}
+local icons = {}
+local w,h = term.getSize()
+local tbi = {} -- this table sets up for picking images for icons
+local tbl = {} -- this keep the cords for tbi
+local tbP = {} -- sets up program change
+local tbl2 = {}
+local pass = " " -- admin pass t ////set for confing
+local t = nill
+wh = {term.getSize()}
+--get to backbones
+local Inumber = nil
+--setup
+local src = "os/files/conf"
+function setT(srcs,save)
+  if type(srcs)=="string" and fs.exists(srcs) then
+	  local file = fs.open(srcs,"w")
+	  file.write(textutils.serialize(save))
+	  file.close()
+  else
+	error("tried to load unkown file: "..srcs)
+  end
+end
+function getT(srcs,save) -- save = 1 or 1 0 == icons 1 == config
+  if type(srcs)=="string" and fs.exists(srcs) and type(save)=="number" then
+	  local file = fs.open(srcs,"r")
+	  local data = file.readAll() 
+	  file.close()
+	  if save==0 then
+	  icons = textutils.unserialize(data)
+	  elseif save==1 then
+	  --used for config
+	  else
+	  end
+    else
+	error("tried to load unkown file: "..srcs)
+  end
+end
+function newIcon()
+	A.bc(colors.black)
+	for v,k in ipairs(icons) do
+		if k[6]==false then
+			A.image("os/images/icons/blank",k[1],k[2])
+		end
+	end
+end
+function Picon()
+	if #tbP~=#fs.list("os/programs") then
+		tbP = { }
+		for v,k in ipairs(fs.list("os/programs")) do
+			if fs.isDir("os/programs/"..k) then
+				for s,d in ipairs(fs.list("os/programs/"..k)) do
+					table.insert(tbP,k.."/"..d)
+				end
+			else
+				table.insert(tbP,k)
+			end
+		end
+	end
+	local w,h = term.getSize()
+	local x = 7
+	local y = 2 
+	local x2 = w-8
+	local y2 = h-1
+	A.drawFilledBox(x,y,x2,y2,colors.white)
+	A.drawBox(x,y,x2,y2,colors.black)
+	A.drawLine(x2-1,y+1,x2-1,y2-1,colors.orange)
+	A.drawPixel(x2-1,y+1,colors.red)
+	A.drawPixel(x2-1,y2-1,colors.red)
+	A.pos(x2-1,y+1)
+	write("^")
+	A.pos(x2-1,y2-1)
+	write("v")
+	local X = x+2 
+	local Y = y+1
+	A.bc(colors.white)
+	A.tc(colors.black)
+	for v,k in ipairs(tbP) do
+
+		A.pos(X,Y)
+		write(k)
+		local t = {X-1,Y,X+#k,k}
+		table.insert(tbl2,t)
+		Y=Y+1
+	end
+end
+function Nicon()
+		tbi = {}
+		for v,k in ipairs(fs.list("os/images/icons")) do
+			if fs.isDir("os/images/icons/"..k) then
+				for s,d in ipairs(fs.list("os/images/icons/"..k)) do
+					table.insert(tbi,k.."/"..d)
+				end
+			else
+				if k=="blank" then
+				else
+					table.insert(tbi,k)
+				end
+			end
+		end
+	local w,h = term.getSize()
+	local imgN = math.ceil(#tbi/2)
+	local x = math.ceil((w/2) - ((imgN*5+(imgN+3))/2))
+	local y = math.ceil((h/2) - ((2*5+4)/2))
+	local x2 = x+(imgN*6+2)
+	local y2 = y+14
+	A.drawFilledBox(x,y,x2,y2,colors.black)
+	A.drawBox(x,y,x2,y2,colors.white)
+	local cx = x+2
+	local cy = y+2
+	for v,k in ipairs(tbi) do
+		A.image("os/images/icons/"..k,cx,cy)
+		local t = {cx,cy,cx+5,cy+5,k}
+		table.insert(tbl,t)
+		if cy==y+2+6 then
+			cy=cy-6
+			cx=cx+6
+		else
+			cy=cy+6
+		end
+	end
+end
+function dm() 
+  conf = A.getT("os/files/config")
+  A.bc(conf["BCC"])
+  A.meun(conf["BCI"],1,1)
+  local current = 1
+  local x = 2
+  local y = 2
+  while x<=47 do
+    while y<=14 do
+		if icons[current][6]==true then
+			A.image(icons[current][7],x,y)
+		end
+		current = current+1
+	  y = y+6
+    end
+    y=2
+    x = x+6
+  end
+  A.Time(wh[1]-4,wh[2],conf["MC"],conf["MTC"])
+end
+--======================================================================
+--======================================================================
+function main()
+	getT(src,0)
+	dm()
+	t = os.startTimer(.3)
+	while rng do
+	  local arg = { os.pullEvent() }
+	  setT(src,icons) 
+--cm0------------------------------------------------------------------
+	  if arg[1]=="timer" and arg[2]==t then
+		A.Time(wh[1]-4,wh[2],conf["MC"],conf["MTC"])
+		t = os.startTimer(.01)
+	  elseif cm==0 then
+		--Main Meun nothing open
+		if arg[1]=="mouse_click" then
+		  if arg[2]==1 then
+			if arg[3]>=2 and arg[3]<=8 and arg[4]==1 then
+			A.meun1()
+			cm=1
+			else
+			  local x = arg[3]
+			  local y = arg[4]
+			  for v,k in pairs(icons) do
+				if x>=k[1] and x<=k[3] then
+				  if y>=k[2] and y<=k[4] then
+					if k[6]==true then
+						shell.run(k[5])
+						dm()
+						t = os.startTimer(.3)
+					end
+				  end
+				end 
+			  end
+			end 
+		  elseif arg[2]==2 then 
+			local ok = false
+			local x = arg[3]
+			local y = arg[4]
+			for v,k in pairs(icons) do
+				if x>=k[1] and x<=k[3] then
+					if y>=k[2] and y<=k[4] then
+						if k[6]==true then
+							ok = true
+							local o = k[4]
+							local a = {k[1],k[3]}
+							if v>=22 then
+								a = {k[1]-6,k[3]-6}
+							end
+							if v%3==0 then
+								o = k[4]-10
+							end
+							xy2 = {a[1],k[2],a[2],o,v} -- x,y,x2,y2,#
+						end
+					end
+				end 
+			end
+			if ok==true then
+				A.meun3(xy2)
+				cm=3
+			else
+				xy = A.meun2(arg[3],arg[4])
+				cm=2
+			end
+		  end
+		end
+--cm1------------------------------------------------------------------
+	  elseif cm==1 then
+		--start meun
+		if arg[1]=="mouse_click" then
+		 if arg[2]==1 then
+		  if arg[3]<=11 and arg[3]>1 then
+			if arg[4]==3 then
+			  os.shutdown()
+			elseif arg[4]==4 then
+			  os.reboot()
+			elseif arg[4]==5 then
+			  dm()
+			  if A.userin(2,3,2) then
+				rng=false
+			  end
+			elseif arg[4]==6 then
+				fig.main()
+				dm()
+				t = os.startTimer(.3)
+			end
+		  end
+		 end
+		 cm=0
+		 dm()
+		end
+--cm2----------------------------------------------------------------------- 
+	  elseif cm==2 then
+		--right click meun
+		local d = false
+		if arg[1]=="mouse_click" then
+		  if arg[2]==1 then
+			if arg[3]>=xy[1] and arg[3]<=xy[1]+11 then
+			  if arg[4]==xy[2]+1 then
+				dm()
+				local input = A.userin(2,3,1)
+				shell.run("paint",input) ---new icon
+			  elseif arg[4]==xy[2]+2 then
+				d=true
+			  end
+			  t = os.startTimer(.3)
+			end
+		  end
+		  if d==true then
+			cm=4
+			dm()
+		  else
+			cm=0
+			dm()
+		  end
+		end
+--cm3-------------------------------------------------------------------
+	  elseif cm==3 then 
+		--right click on icons
+		if arg[1]=="mouse_click" then
+			A.bc(colors.blue)
+			if arg[2]==1 then
+				if arg[3]>=xy2[1] and arg[3]<=xy2[3]+10 then
+					if arg[4]==xy2[4]+2 then
+						dm()
+						Picon()
+						cm=6
+					elseif arg[4]==xy2[4]+3 then
+						cm=5
+						dm()
+						Nicon()
+					elseif arg[4]==xy2[4]+4 then
+						icons[xy2[5]][6] = false 
+						cm=0
+						dm()
+					else	
+						cm=0
+						dm()
+					end
+				else
+					cm=0
+					dm()
+				end
+			else
+				cm=0
+				dm()
+			end
+		end
+--cm4-------------------------------------------------------------------
+	  elseif cm==4 then
+		newIcon()
+		--add icon
+		if arg[1] == "mouse_click" then
+			if arg[2]==1 then
+				local x = arg[3]
+				local y = arg[4]
+				for v,k in pairs(icons) do
+					if x>=k[1] and x<=k[3] then
+						if y>=k[2] and y<=k[4] then
+							if k[6]==false then
+								icons[v][6]=true
+								icons[v][7]="os/images/icons/icon1"
+								icons[v][5]=""
+								cm=0
+								dm()
+							else
+								cm=0
+								dm()
+							end
+						end
+					end
+				end
+				cm=0
+				dm()
+			else
+				cm=0
+				dm()
+			end
+		end
+--cm5-------------------------------------------------------------------  
+	  
+	  elseif cm==5 then
+		--icon image meun
+		if arg[1] == "mouse_click" then
+			local ok = false
+			for v,k in ipairs(tbl) do
+				if arg[3]>=k[1] and arg[3]<=k[3] then
+					if arg[4]>=k[2] and arg[4]<=k[4] then
+						if arg[2]==1 then
+							icons[xy2[5]][7]="os/images/icons/"..k[5]
+							cm=0
+						elseif arg[2]==2 then
+							ok = true
+							Inumber = k
+						end
+					end
+				end
+			end
+			if ok then
+				A.meun4(Inumber[1],Inumber[4])
+				cm=7
+			else
+				dm()
+				cm=0
+			end
+		end
+--cm6--------------------------------------------------------------------
+	  elseif cm==6 then
+		--program icon meun
+		if arg[1] == "mouse_click" then
+			if arg[2]==1 then
+				for v,k in ipairs(tbl2) do
+					if arg[3]>=k[1] and arg[3]<=k[3] then
+						if arg[4]==k[2] then
+							icons[xy2[5]][5]="os/programs/"..k[4]
+						end
+					end
+				end
+				cm=0
+				dm()
+			else
+				cm=0
+				dm()
+			end
+		end
+	  elseif cm==7 then 
+		--right clikc image icon meun
+		if arg[1] == "mouse_click" then
+			if arg[2]==1 then
+				if arg[3]>=Inumber[1] and arg[3]<=Inumber[3] then -- checks the x
+					if arg[4] == Inumber[4]+1 then
+						shell.run("paint","os/images/icons/"..Inumber[5])
+					elseif arg[4] == Inumber[4]+2 then
+						fs.delete("os/images/icons/"..Inumber[5])
+						for v,k in ipairs(icons) do
+							if k[7]=="os/images/icons/"..Inumber[5] then
+								icons[v][7]="os/images/icons/icon1"
+							end
+						end
+					end
+					t = os.startTimer(.3)
+				end
+				cm=5
+				dm()
+				Nicon()
+			end
+		end
+	  end
+	end
+----------------------------------------------------------------------
+	A.bc(colors.black)
+	A.tc(colors.white)
+	A.cls()
+	A.pos(1,1)
+	return true
+end
+local ok, err = pcall(main)
+if not ok then
+	A.Error(err)
+end

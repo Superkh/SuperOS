@@ -1,0 +1,15 @@
+{
+  MTC = 1,
+  BCI = "os/images/boot",
+  BCC = 8192,
+  MC = 2048,
+  CBI = "os/images/config",
+  PW = "D",
+  UN = "kyle",
+  VER = "2.5",
+  SMTC = 1,
+  CBC = 32768,
+  SMC = 16384,
+  AD = "",
+  CTC = 1,
+}

@@ -1,0 +1,195 @@
+User = " "
+Pass = " "
+run = true
+conf = {}
+os.loadAPI("os/APIS/A")
+--os.pullEvent = os.pullEventRaw
+local conf = A.getT("os/files/config")
+User = conf["UN"]
+Pass = conf["PW"]
+function check()
+	sleep(.02)
+	if fs.exists("os") and fs.isDir("os") then
+		write("  ") 
+		sleep(.02)
+		if fs.exists("os/os") and not fs.isDir("os/os") then
+			write("  ") 
+			sleep(.03)
+		else
+			error("os file is missing")
+		end
+		if fs.exists("os/APIS") and fs.isDir("os/APIS") then
+			write("  ")
+			sleep(.03)		
+			if fs.exists("os/APIS/A") and not fs.isDir("os/APIS/A") then
+				write("  ") 
+				sleep(.02)
+			else
+				error("A is missing form APIS")
+			end
+			if fs.exists("os/APIS/update") and not fs.isDir("os/APIS/update") then
+				write("  ") 
+				sleep(.02)
+			else
+				error("Update is missing form APIS")
+			end
+		else
+			error("APIS Folder is missing")
+		end
+		if fs.exists("os/files") and fs.isDir("os/files") then
+			write("  ") 
+			sleep(.03)
+			if fs.exists("os/files/conf") and not fs.isDir("os/files/conf") then
+				write("  ") --10
+				sleep(.02)
+			else
+				error("the conf file is missing form files")
+			end
+		else
+			error("the files dir is missing")
+		end
+		if fs.exists("os/images") and fs.isDir("os/images") then
+			write("  ") 
+			sleep(.03)
+			if fs.exists("os/images/boot") and not fs.isDir("os/images/boot") then
+				write("  ")
+				sleep(.02)
+			else
+				error("boot image is missing form images")
+			end
+			if fs.exists("os/images/input") and not fs.isDir("os/images/input") then
+				write("  ")
+				sleep(.03)
+			else
+				error("input image is missing form images")
+			end
+			if fs.exists("os/images/update") and not fs.isDir("os/images/update") then
+				write("  ")
+				sleep(.03)
+			else
+				error("update image is missing form images")
+			end
+			if fs.exists("os/images/icons") and fs.isDir("os/images/icons") then
+				write("  ")
+				sleep(.03)
+				if fs.exists("os/images/icons/blank") and not fs.isDir("os/images/icons/blank") then
+				write("  ") -- 20
+					sleep(.03)
+				else
+					error("blank image is missing form icons folder")
+				end
+			else
+				error("icons folder is missing form images")
+			end
+		else
+			error("images folder is missing")
+		end
+	else
+		error("os is missing or is not a dir")
+	end
+	textutils.slowWrite(string.rep(" ",6))
+end
+function preload()
+  local up = A.checkupdate()
+  if up then
+	local up2 = A.check2()
+	if up2 then
+		A.bc(colors.black)
+		A.tc(colors.white)
+		A.cls()
+		local function cT(t,l)
+			local w,h = term.getSize()
+			A.pos((math.floor(w/2-t:len()/2 +.5)),l)
+			write(t)
+		end
+		cT("Updating OS",1)
+		print(string.rep("=",51))
+		if fs.exists("os/APIS/update") then
+			fs.delete("os/APIS/update")
+		end
+		A.pastebin("BqUbtktC","os/APIS/update")
+		shell.run("os/APIS/update")
+	end
+  end
+  local wh = { term.getSize() }
+  A.bc(colors.blue)
+  A.cls()
+  A.pos((wh[1]/2)-3,wh[2]/2-1)
+  A.wirte("SuperOS")
+  paintutils.drawLine(10,wh[2]/2,wh[1]-10,wh[2]/2,colors.gray)
+  A.pos(10,wh[2]/2)
+  A.bc(colors.green)
+  check()
+  return true
+end
+function ds()
+	A.bc(colors.blue)
+	A.cls()
+	A.image("os/images/boot",1,1)
+	---------
+	A.tc(colors.blue)
+	A.pos(21,6)
+	A.bc(colors.black)
+	A.wirte("User:")
+	A.pos(21,8)
+	A.wirte("Pass:")
+end
+local function user()
+  A.pos(26,6)
+  local I = io.read()
+  if I==User then
+    return true
+  elseif I == "error" then
+	error("user error intered")
+  else
+    return false
+  end
+end
+local function pass()
+  A.pos(26,8)
+  local I = read("*")
+  if I == Pass then
+    return true
+  else
+    return false
+  end
+end
+A.cls()
+local function userin()
+  preload()
+  ds()
+  local times = 0
+  local run = true
+  while run do
+    local s = user()
+    if s == true then
+      run = false
+    else
+      ds()
+    end
+  end
+  run = true
+  sleep(.05)
+  while run do
+    if times<3 then
+      local s = pass()
+      if s==true then
+        break
+      else
+        times = times+1
+      end
+    else
+      os.reboot()
+    end
+    ds()
+    A.pos(26,6)
+    A.wirte(User)
+  end
+  return true
+end
+local ok, err = pcall(userin)
+if not ok then
+	A.Error(err)
+else
+	shell.run("os/os")
+end
